@@ -1,0 +1,6 @@
+{
+  "name": "Engineering Delivery & QA Evidence Agent",
+  "description": "An interactive sales demo for an AI release-evidence agent: it assembles a release-candidate dossier, ranks test gaps with a risk score, and routes to a QA-lead remediation gate and an explicit release-manager sign-off. Human engineering judgment owns every decision.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,0 +1,12 @@
+# Environment files
+.env
+.env.*
+*.env
+*.env.*
+.envrc
+
+# Sanitized templates are safe to commit.
+!.env.example
+!*.env.example
+!apps/*/.env.local-dev
+!apps/*/.env.production

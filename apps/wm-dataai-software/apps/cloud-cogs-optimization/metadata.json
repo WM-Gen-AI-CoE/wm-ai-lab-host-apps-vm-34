@@ -1,0 +1,6 @@
+{
+  "name": "Cloud COGS Optimization Agent",
+  "description": "An interactive demo for an AI cloud-spend optimization agent: it detects spend anomalies, diagnoses workload waste, recommends SLA-safe rightsizing and tuning, and tracks realized savings against gross margin - with the owning engineer approving every change.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,0 +1,9 @@
+# Build-time app sources pull in their own node_modules; never deploy these.
+# Only public/, server.js, package.json, and railway.json are needed at runtime.
+node_modules/
+apps/*/node_modules/
+apps/*/dist/
+apps/*/.preview/
+build-all.log
+.env
+.env.local

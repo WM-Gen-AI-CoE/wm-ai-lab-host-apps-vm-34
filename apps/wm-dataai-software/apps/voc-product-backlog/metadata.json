@@ -1,0 +1,6 @@
+{
+  "name": "Voice-of-Customer to Product Backlog",
+  "description": "An interactive sales demo for an AI VOC-to-backlog agent: ingest customer feedback, cluster into themes, link each to ARR-at-risk, and hand engineering an evidence-backed backlog item, with the PM in control of every decision.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

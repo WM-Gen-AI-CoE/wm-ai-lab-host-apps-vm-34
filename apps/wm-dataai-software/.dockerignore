@@ -1,0 +1,13 @@
+# Keep the Docker build context tiny and prevent Railway from ever seeing
+# the build-time React/Vite sources. Only package.json, server.js and
+# public/ are needed at runtime.
+apps
+node_modules
+**/node_modules
+build-all.ps1
+build-all.log
+app-map.json
+.git
+.gitignore
+.env
+.env.example

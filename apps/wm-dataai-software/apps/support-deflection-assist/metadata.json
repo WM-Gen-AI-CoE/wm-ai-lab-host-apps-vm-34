@@ -1,0 +1,6 @@
+{
+  "name": "Support Deflection & Agent Assist",
+  "description": "An interactive sales demo for AI-assisted customer and technical support: classify tickets, retrieve grounded evidence, draft a customer reply, and let the support engineer approve, send, or escalate. Deflect the repetitive, escalate the risky.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
