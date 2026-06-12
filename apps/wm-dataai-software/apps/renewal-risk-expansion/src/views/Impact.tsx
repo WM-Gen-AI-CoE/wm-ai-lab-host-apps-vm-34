@@ -1,16 +1,38 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { kpis } from '../data';
 import { GuideCollapsible } from '../components/GuideCollapsible';
 import { AITask, HumanTask, Badge, Button } from '../components/Shared';
 import { Check, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 
+// NRR waterfall: each step is a floating bar segment that stacks on the running total,
+// so the committed 106% visibly climbs out of the starting 102%.
 const bridge = [
-  { label: 'Starting NRR (book)', value: '102%', kind: 'start' as const },
-  { label: 'Northwind save (2-yr co-term)', value: '+1.4 pts', kind: 'up' as const },
-  { label: 'Insights + support expansion', value: '+2.1 pts', kind: 'up' as const },
-  { label: 'Residual churn (unsaved accounts)', value: '-0.5 pts', kind: 'down' as const },
-  { label: 'Committed NRR', value: '106%', kind: 'end' as const },
+  { label: 'Starting NRR (book)', value: '102%', delta: 0, kind: 'start' as const },
+  { label: 'Northwind save (2-yr co-term)', value: '+1.4 pts', delta: 1.4, kind: 'up' as const },
+  { label: 'Insights + support expansion', value: '+2.1 pts', delta: 2.1, kind: 'up' as const },
+  { label: 'Residual churn (unsaved accounts)', value: '-0.5 pts', delta: -0.5, kind: 'down' as const },
+  { label: 'Committed NRR', value: '106%', delta: 0, kind: 'end' as const },
 ];
+
+// Geometry for the waterfall: map the 101.5 - 106.5 band onto 0 - 100% width.
+const AXIS_MIN = 101.5;
+const AXIS_MAX = 106.5;
+const START_NRR = 102;
+const toPct = (v: number) => ((v - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * 100;
+const bridgeBars = (() => {
+  let running = START_NRR;
+  return bridge.map((b) => {
+    if (b.kind === 'start') return { ...b, left: 0, width: toPct(START_NRR), runEnd: START_NRR };
+    if (b.kind === 'end') return { ...b, left: 0, width: toPct(106), runEnd: 106 };
+    const from = running;
+    const to = running + b.delta;
+    running = to;
+    const lo = Math.min(from, to);
+    const hi = Math.max(from, to);
+    return { ...b, left: toPct(lo), width: toPct(hi) - toPct(lo), runEnd: to };
+  });
+})();
 
 const pipeline = [
   { account: 'Northwind Logistics', play: 'Insights + premium support', arr: '+$275K', stage: 'Proposed' },
@@ -51,21 +73,37 @@ export const Impact = ({ onNext }: { onNext: () => void }) => {
       </div>
 
       <div className="bg-white rounded-lg border border-wm-gray-med shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-wm-gray-med bg-wm-gray-light flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-green-600" />
-          <h3 className="font-semibold text-wm-blue text-sm">Net Revenue Retention Bridge</h3>
+        <div className="px-4 py-3 border-b border-wm-gray-med bg-wm-gray-light flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-green-600" />
+            <h3 className="font-semibold text-wm-blue text-sm">Net Revenue Retention Bridge</h3>
+          </div>
+          <span className="text-xs text-wm-gray-dark">Approved actions move book NRR from 102% to a committed 106%.</span>
         </div>
         <div className="p-4 space-y-2">
-          {bridge.map((b, i) => (
-            <div key={i} className={`flex items-center justify-between px-3 py-2 rounded-md ${b.kind === 'start' || b.kind === 'end' ? 'bg-wm-gray-light font-semibold text-wm-blue' : 'text-wm-gray-dark'}`}>
-              <span className="text-sm flex items-center gap-2">
-                {b.kind === 'up' && <TrendingUp className="w-4 h-4 text-green-600" />}
-                {b.kind === 'down' && <TrendingDown className="w-4 h-4 text-wm-magenta" />}
-                {b.label}
-              </span>
-              <span className={`text-sm font-mono ${b.kind === 'up' ? 'text-green-700' : b.kind === 'down' ? 'text-wm-magenta' : 'text-wm-blue'}`}>{b.value}</span>
-            </div>
-          ))}
+          {bridgeBars.map((b, i) => {
+            const isAnchor = b.kind === 'start' || b.kind === 'end';
+            const barColor = b.kind === 'up' ? '#16A34A' : b.kind === 'down' ? '#F900D3' : b.kind === 'end' ? '#070154' : '#CED7E6';
+            return (
+              <div key={i} className="grid grid-cols-[minmax(0,15rem)_1fr_3.5rem] items-center gap-3">
+                <span className={`text-sm flex items-center gap-2 ${isAnchor ? 'font-semibold text-wm-blue' : 'text-wm-gray-dark'}`}>
+                  {b.kind === 'up' && <TrendingUp className="w-4 h-4 text-green-600 shrink-0" />}
+                  {b.kind === 'down' && <TrendingDown className="w-4 h-4 text-wm-magenta shrink-0" />}
+                  {b.label}
+                </span>
+                <div className="relative h-6 bg-wm-gray-light/60 rounded">
+                  <motion.div
+                    className="absolute top-0 h-6 rounded"
+                    style={{ backgroundColor: barColor, left: `${b.left}%` }}
+                    initial={{ width: 0, opacity: 0.4 }}
+                    animate={{ width: `${Math.max(b.width, 1.5)}%`, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.15 + i * 0.25, ease: 'easeOut' }}
+                  />
+                </div>
+                <span className={`text-sm font-mono text-right ${b.kind === 'up' ? 'text-green-700' : b.kind === 'down' ? 'text-wm-magenta' : b.kind === 'end' ? 'text-wm-blue font-bold' : 'text-wm-blue'}`}>{b.value}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

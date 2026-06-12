@@ -71,14 +71,21 @@ export const Detect = ({ onNext }: { onNext: () => void }) => {
                   <td className="px-4 py-4 font-semibold text-wm-blue whitespace-nowrap">{usd(w.wasteEstimate)}</td>
                   <td className="px-4 py-4"><Badge variant={statusVariant(w.status)}>{w.status}</Badge></td>
                   <td className="px-4 py-4">
-                    <Button
-                      onClick={onNext}
-                      variant={idx === 0 ? 'primary' : 'outline'}
-                      disabled={w.status === 'Optimized'}
-                      className="whitespace-nowrap"
-                    >
-                      {w.status === 'Optimized' ? 'Optimized' : 'Investigate'}
-                    </Button>
+                    {w.status === 'Optimized' ? (
+                      <Button onClick={onNext} variant="outline" disabled className="whitespace-nowrap">
+                        Optimized
+                      </Button>
+                    ) : idx === 0 ? (
+                      <Button onClick={onNext} variant="primary" className="whitespace-nowrap">
+                        Investigate
+                      </Button>
+                    ) : (
+                      <span title="Next in the anomaly queue" className="inline-block">
+                        <Button onClick={onNext} variant="outline" disabled className="whitespace-nowrap">
+                          Queued
+                        </Button>
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

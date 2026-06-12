@@ -112,9 +112,11 @@ export const Portfolio = ({ onNext }: { onNext: () => void }) => {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <Button onClick={onNext} variant={isTop ? 'primary' : 'outline'} className="whitespace-nowrap">
-                        {isTop ? 'Work account' : 'Open'}
-                      </Button>
+                      <span title={isTop ? undefined : 'Walkthrough follows the top at-risk account, Northwind Logistics'}>
+                        <Button onClick={onNext} variant={isTop ? 'primary' : 'outline'} className="whitespace-nowrap">
+                          {isTop ? 'Work account' : 'Preview'}
+                        </Button>
+                      </span>
                     </td>
                   </tr>
                 );

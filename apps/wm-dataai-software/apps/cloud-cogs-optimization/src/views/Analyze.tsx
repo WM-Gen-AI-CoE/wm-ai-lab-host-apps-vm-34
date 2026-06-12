@@ -3,6 +3,7 @@ import { costBreakdown } from '../data';
 import { GuideCollapsible } from '../components/GuideCollapsible';
 import { AITask, HumanTask, Button } from '../components/Shared';
 import { ArrowRight, Cpu, AlertTriangle } from 'lucide-react';
+import { motion } from 'motion/react';
 
 const usd = (n: number) => '$' + n.toLocaleString('en-US');
 
@@ -26,6 +27,42 @@ export const Analyze = ({ onNext }: { onNext: () => void }) => {
       <AITask>
         The agent decomposed analytics-elt-nightly into compute, storage, and egress and joined each to its utilization. Compute is the dominant cost at low utilization, and an orphaned cross-region replica copy is driving egress that downstream reporting no longer reads.
       </AITask>
+
+      {/* Signature waste gauge: the app's punchline as one screenshot-able moment. */}
+      <div className="bg-wm-blue text-white rounded-xl p-6 shadow-md overflow-hidden">
+        <div className="flex items-center justify-between gap-8">
+          <div className="text-center shrink-0">
+            <div className="text-5xl md:text-6xl font-bold leading-none text-wm-magenta">74%</div>
+            <div className="text-xs uppercase tracking-wider text-white/70 mt-2">of spend is compute</div>
+          </div>
+          <div className="flex-1 h-px bg-white/20 hidden sm:block" />
+          <div className="text-center shrink-0">
+            <div className="text-5xl md:text-6xl font-bold leading-none text-white">28%</div>
+            <div className="text-xs uppercase tracking-wider text-white/70 mt-2">average utilization</div>
+          </div>
+        </div>
+
+        {/* Bar: spend fills to 74% in brand hi-blue; a thin magenta tick marks the 28% utilization line. */}
+        <div className="mt-6">
+          <div className="relative h-5 bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-wm-blue-highlight rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: '74%' }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
+            />
+            <div className="absolute inset-y-0 w-0.5 bg-wm-magenta" style={{ left: '28%' }} />
+          </div>
+          <div className="flex justify-between text-[10px] uppercase tracking-wider text-white/50 mt-1.5">
+            <span>compute share of spend</span>
+            <span>28% utilization line</span>
+          </div>
+        </div>
+
+        <p className="text-sm md:text-base font-semibold text-white mt-5">
+          You are paying for 3.6x the compute this job uses.
+        </p>
+      </div>
 
       <div className="bg-white rounded-lg border border-wm-gray-med shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-wm-gray-med bg-wm-gray-light flex items-center justify-between">

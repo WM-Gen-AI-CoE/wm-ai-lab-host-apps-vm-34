@@ -710,6 +710,8 @@
     white-space: normal;
     line-height: 1.15;
   }
+  .wm-hublink { opacity: .5; transition: opacity .15s ease, color .15s ease; }
+  .wm-hublink:hover { opacity: 1; color: #F900D3; }
   .wm-topnav > div {
     max-width: 100%;
   }
@@ -1288,9 +1290,8 @@ function CContact({ tone, dense, padX, sectionRef }) {
           <div style={{ fontFamily: 'var(--fs-sans)', fontWeight: 700, fontSize: 18, color: CSHARED.blue, marginBottom: 6 }}>Cam Cross - Partner, Data + AI</div>
           <div style={{ fontFamily: 'var(--fs-mono)', fontSize: 13, color: CSHARED.blue, opacity: 0.8, marginBottom: 24 }}>ccross@westmonroe.com</div>
           <div style={{ fontFamily: 'var(--fs-mono)', fontSize: 11, color: CSHARED.blue, opacity: 0.6, letterSpacing: 0.6, lineHeight: 1.6 }}>
-            © 2026 - ALL RIGHTS RESERVED<br />
-            CHICAGO · NEW YORK · LONDON · SEATTLE<br />
-            ACCESSIBILITY · PRIVACY · TERMS
+            © 2026 West Monroe. All Rights Reserved.<br />
+            Chicago (HQ) · New York · Dallas · Los Angeles · Minneapolis · San Francisco · Seattle · Boston · Washington, D.C. · London · Costa Rica
           </div>
         </div>
       </div>
@@ -1985,7 +1986,7 @@ function FinalNav({ navActive, scrollTo, padX }) {
         display: 'flex', justifyContent: 'space-between',
         fontFamily: 'var(--fs-mono)', fontSize: 11, color: F.dGray, letterSpacing: 0.6, textTransform: 'uppercase',
       }}>
-        <span>West Monroe · Data + AI</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}><a className="wm-hublink" href="/secure/apps/38/wm-dataai-hub/" title="All industries · Data & AI hub" aria-label="Back to the Data and AI hub" style={{ display: 'inline-flex', alignItems: 'center', color: 'inherit', textDecoration: 'none' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></a>West Monroe · Data + AI</span>
         <span>A point of view on Driving Value on Databricks · 2026</span>
       </div>
       <div style={{
@@ -2485,16 +2486,7 @@ function FinalPatterns({ dense, padX, motion = true, sectionRef }) {
       impact: "Targets the renewal book that drives recurring revenue, moving the NRR line rather than just summarizing accounts.",
       quant: "Net revenue retention 102% → 106%; gross renewal rate 89% → 94%; at-risk ARR $14.2M → $5.8M; expansion pipeline identified $1.2M → $4.8M.",
       qual: "Every risk score carries its evidence, and a human approves every concession and customer message." },
-    { code: "Use Case 02", vertical: "gtm", proto: "support-deflection-assist/", img: "shots/support-deflection-assist.png?v=2", name: "Support Deflection & Agent Assist",
-      forWho: "support engineers and technical support managers",
-      bullets: ["Classifies tickets by issue, severity, and tier","Retrieves similar cases, known defects, and KB","Drafts a reply and troubleshooting path","Support engineer validates before anything sends"],
-      tools: ["Databricks Apps","Genie","ML","Vector Search","AI/BI"],
-      who: "Support engineers, technical support managers, and CX ops; the CCO and COO own cost-to-serve.",
-      how: "The agent classifies each ticket, retrieves similar resolved cases and known defects, and drafts a resolution, while the support engineer validates and edits before any reply reaches the customer and routes the risky to engineering.",
-      impact: "Deflects the repetitive and escalates the risky, cutting support cost-to-serve while protecting CSAT.",
-      quant: "Self-service deflection 24% → 41%; average handle time 18 → 11 min; cost per ticket $14.20 → $9.10; first-contact resolution 62% → 78%.",
-      qual: "Customer-facing replies never reference AI, and a human approves every send and escalation." },
-    { code: "Use Case 03", vertical: "gtm", proto: "quote-to-cash-deal-desk/", img: "shots/quote-to-cash-deal-desk.png?v=2", name: "Quote-to-Cash Deal Desk Copilot",
+    { code: "Use Case 02", vertical: "gtm", proto: "quote-to-cash-deal-desk/", img: "shots/quote-to-cash-deal-desk.png?v=2", name: "Quote-to-Cash Deal Desk Copilot",
       forWho: "deal desk, RevOps, and finance",
       bullets: ["Assembles deal history, usage, and contract terms","Flags discount leakage and nonstandard terms","Drafts price, uplift, and approval rationale","Deal desk and finance approve every exception"],
       tools: ["Databricks Apps","Genie","ML","AI/BI","Unity Catalog"],
@@ -2503,7 +2495,7 @@ function FinalPatterns({ dense, padX, motion = true, sectionRef }) {
       impact: "Recovers margin and uplift left on the table, with every recommendation tied to an approved finance definition.",
       quant: "Avoidable discount leakage 8.5% → 3.2%; net price realization 91% → 96%; renewal uplift capture 2.1% → 5.4%; deal-desk cycle 6.2 → 2.1 days.",
       qual: "Every flag shows its dollar impact, and finance approves every exception and customer-facing quote." },
-    { code: "Use Case 04", vertical: "gtm", proto: "product-adoption-activation/", img: "shots/product-adoption-activation.png?v=2", name: "Product Adoption & Activation Orchestrator",
+    { code: "Use Case 03", vertical: "gtm", proto: "product-adoption-activation/", img: "shots/product-adoption-activation.png?v=2", name: "Product Adoption & Activation Orchestrator",
       forWho: "product managers and growth teams",
       bullets: ["Maps activation funnels by cohort","Diagnoses the blocker behind stalled journeys","Drafts nudges, enablement, and CSM outreach","PM approves every experiment"],
       tools: ["Databricks Apps","Genie","ML","AI/BI"],
@@ -2512,15 +2504,24 @@ function FinalPatterns({ dense, padX, motion = true, sectionRef }) {
       impact: "Turns product telemetry into finance-owned retention and expansion, lifting activation and expansion ARR.",
       quant: "Activation rate 52% → 64%; feature adoption 38% → 51%; 30-day usage lift 0 → +11%; expansion-qualified accounts 120 → 280.",
       qual: "Every play shows the cohort evidence behind it, and a PM approves each experiment before it ships." },
-    { code: "Use Case 01", vertical: "product", proto: "aviation-network-resilience-simulator/", img: "shots/aviation-network-resilience-simulator.png?v=2", name: "Aviation Network Resilience Simulator",
-      forWho: "a digital-native aviation software firm and the airline ops teams it serves",
-      bullets: ["Scores network disruption risk across the next 24 hours","Decomposes risk into weather, ATC, rotation, and crew drivers","Simulates scenarios and drafts a grounded mitigation plan","Ops controllers approve and deploy every mitigation"],
-      tools: ["Databricks Apps","Mosaic AI","ML","Genie"],
-      who: "Product and data teams at a digital-native aviation software ISV, and the airline network operations controllers who run the product day to day.",
-      how: "The product lands flight, crew, weather, and ATC signals in the lakehouse, scores network resilience, decomposes the risk drivers, and lets controllers simulate disruptions and generate a grounded mitigation plan - a human reviews and deploys it.",
-      impact: "Gives a software firm a defensible, AI-native product that turns raw aviation data into a daily decision surface its airline customers will pay for and rely on.",
-      quant: "Illustrative prototype data: network risk 78/100, 126 flights at elevated risk, 1,840 delay minutes and 11 cancellations modeled, with a 94% confidence mitigation grounded in 128 data sources.",
-      qual: "Decision support only - controllers approve every mitigation, and each recommendation stays grounded and traceable to its source data." },
+    { code: "Use Case 04", vertical: "gtm", proto: "support-deflection-assist/", img: "shots/support-deflection-assist.png?v=2", name: "Support Deflection & Agent Assist",
+      forWho: "support engineers and technical support managers",
+      bullets: ["Classifies tickets by issue, severity, and tier","Retrieves similar cases, known defects, and KB","Drafts a reply and troubleshooting path","Support engineer validates before anything sends"],
+      tools: ["Databricks Apps","Genie","ML","Vector Search","AI/BI"],
+      who: "Support engineers, technical support managers, and CX ops; the CCO and COO own cost-to-serve.",
+      how: "The agent classifies each ticket, retrieves similar resolved cases and known defects, and drafts a resolution, while the support engineer validates and edits before any reply reaches the customer and routes the risky to engineering.",
+      impact: "Deflects the repetitive and escalates the risky, cutting support cost-to-serve while protecting CSAT.",
+      quant: "Self-service deflection 24% → 41%; average handle time 18 → 11 min; cost per ticket $14.20 → $9.10; first-contact resolution 62% → 78%.",
+      qual: "Customer-facing replies never reference AI, and a human approves every send and escalation." },
+    { code: "Use Case 01", vertical: "product", proto: "engineering-qa-evidence/", img: "shots/engineering-qa-evidence.png?v=2", name: "Engineering Delivery & QA Evidence",
+      forWho: "engineering leads, QA, and release managers",
+      bullets: ["Compiles the release-candidate evidence pack","Ranks test gaps and release risk","QA approves the remediation plan","Release manager signs off, not the agent"],
+      tools: ["Databricks Apps","Genie","ML","AI/BI"],
+      who: "Engineering leads, QA, and release managers; the CTO and CPO sponsor.",
+      how: "The agent reviews requirements, code changes, tests, defects, and incident history to draft a release-risk summary and ranked test gaps, while a QA lead approves remediation and a release manager signs off. The agent never approves a release.",
+      impact: "Improves release confidence and catches high-risk releases before they ship, without bypassing engineering judgment.",
+      quant: "Release cycle time 14 → 11 days; escaped defects per release 9 → 4; triage productivity 0 → +22%; high-risk releases caught pre-ship 60% → 88%.",
+      qual: "The full evidence pack stays attached, and a human release manager owns the sign-off." },
     { code: "Use Case 02", vertical: "product", proto: "voc-product-backlog/", img: "shots/voc-product-backlog.png?v=2", name: "Voice-of-Customer to Product Backlog",
       forWho: "product managers and product ops",
       bullets: ["Ingests tickets, calls, reviews, and churn reasons","Clusters feedback into themes","Links each theme to ARR-at-risk and defects","PM validates priority before backlog handoff"],
@@ -2530,16 +2531,7 @@ function FinalPatterns({ dense, padX, motion = true, sectionRef }) {
       impact: "Prioritizes product work by ARR-at-risk rather than anecdote volume, compressing weeks of synthesis.",
       quant: "Evidence synthesis per cycle 3.5 → 0.9 weeks; ARR-at-risk linked to themes $0 → $6.4M; roadmap items with revenue evidence 18% → 82%; duplicate tickets clustered 0 → 4,200.",
       qual: "Every theme drills to its source records, and a PM owns the priority and the backlog decision." },
-    { code: "Use Case 03", vertical: "product", proto: "engineering-qa-evidence/", img: "shots/engineering-qa-evidence.png?v=2", name: "Engineering Delivery & QA Evidence",
-      forWho: "engineering leads, QA, and release managers",
-      bullets: ["Compiles the release-candidate evidence pack","Ranks test gaps and release risk","QA approves the remediation plan","Release manager signs off, not the agent"],
-      tools: ["Databricks Apps","Genie","ML","AI/BI"],
-      who: "Engineering leads, QA, and release managers; the CTO and CPO sponsor.",
-      how: "The agent reviews requirements, code changes, tests, defects, and incident history to draft a release-risk summary and ranked test gaps, while a QA lead approves remediation and a release manager signs off. The agent never approves a release.",
-      impact: "Improves release confidence and catches high-risk releases before they ship, without bypassing engineering judgment.",
-      quant: "Release cycle time 14 → 11 days; escaped defects per release 9 → 4; triage productivity 0 → +22%; high-risk releases caught pre-ship 60% → 88%.",
-      qual: "The full evidence pack stays attached, and a human release manager owns the sign-off." },
-    { code: "Use Case 04", vertical: "product", proto: "cloud-cogs-optimization/", img: "shots/cloud-cogs-optimization.png?v=2", name: "Cloud & Platform COGS Optimization",
+    { code: "Use Case 03", vertical: "product", proto: "cloud-cogs-optimization/", img: "shots/cloud-cogs-optimization.png?v=2", name: "Cloud & Platform COGS Optimization",
       forWho: "FinOps, cloud, and platform engineering",
       bullets: ["Detects spend anomalies in workload telemetry","Breaks down cost, utilization, and SKU economics","Recommends rightsizing and query tuning","Owner approves every change with an SLA guardrail"],
       tools: ["Databricks Apps","Genie","ML","AI/BI","Lakehouse Monitoring"],
@@ -2547,7 +2539,7 @@ function FinalPatterns({ dense, padX, motion = true, sectionRef }) {
       how: "The agent analyzes workload logs, jobs, storage, and SKU economics to find addressable waste, then recommends rightsizing, scheduling, and query optimization, while the owning engineer approves each change against an SLA guardrail.",
       impact: "Makes gross margin observable at the workload and customer level, converting cloud waste into margin.",
       quant: "Addressable cloud waste 12% → 4%; gross margin 74% → 78%; cost per active customer $3.10 → $2.45; top-workload compute cost 0 → -19%.",
-      qual: "Every recommendation shows its savings and SLA risk, and an owner approves each change with a rollback note." }
+      qual: "Every recommendation shows its savings and SLA risk, and an owner approves each change with a rollback note." },
   ];
   const VERTICALS = [
     { id: "gtm", label: "Go-to-Market & Customer" },
@@ -3914,7 +3906,7 @@ function FinalContact({ tone, dense, padX, sectionRef }) {
               You&rsquo;ve made the investment. The platform is real. What&rsquo;s missing is adoption that reaches the P&amp;L - and that&rsquo;s the work we do. We meet you where the foundation is weakest, bring our accelerators to bear, and ship experiences your people actually use, measured against a number your CFO owns.
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="wm-btn">Request a working session →</button>
+              <button className="wm-btn" onClick={() => window.open('https://qi13k.share.hsforms.com/2uDt11F9HS4WL1CzazUiJBQ', '_blank', 'noopener,noreferrer')}>Request a working session →</button>
             </div>
           </div>
           <div className="wm-box" style={{ padding: 28, background: F.white }}>
@@ -3922,9 +3914,8 @@ function FinalContact({ tone, dense, padX, sectionRef }) {
             <div style={{ fontFamily: 'var(--fs-sans)', fontWeight: 700, fontSize: 18, color: F.blue, marginBottom: 6 }}>Cam Cross - Partner, Data + AI</div>
             <div style={{ fontFamily: 'var(--fs-mono)', fontSize: 13, color: F.blue, opacity: 0.8, marginBottom: 24 }}>ccross@westmonroe.com</div>
             <div style={{ fontFamily: 'var(--fs-mono)', fontSize: 11, color: F.blue, opacity: 0.6, letterSpacing: 0.6, lineHeight: 1.6 }}>
-              © 2026 - ALL RIGHTS RESERVED<br />
-              CHICAGO · NEW YORK · LONDON · SEATTLE<br />
-              ACCESSIBILITY · PRIVACY · TERMS
+              © 2026 West Monroe. All Rights Reserved.<br />
+              Chicago (HQ) · New York · Dallas · Los Angeles · Minneapolis · San Francisco · Seattle · Boston · Washington, D.C. · London · Costa Rica
             </div>
           </div>
         </div>

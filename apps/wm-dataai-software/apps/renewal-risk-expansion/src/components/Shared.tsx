@@ -39,6 +39,69 @@ export const HumanTask = ({ children, done }: { children: React.ReactNode, done?
   </div>
 );
 
+// Signature data-viz: an animated radial gauge that sweeps from green (low risk)
+// to magenta (high risk) and lands on the score on mount. Reused on Signals and Drivers.
+export const RiskGauge = ({ score, size = 132, label = 'Risk score' }: { score: number, size?: number, label?: string }) => {
+  // 270-degree arc (gap at the bottom). Radius and stroke scale with size.
+  const stroke = Math.round(size * 0.1);
+  const r = (size - stroke) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const startAngle = 135; // degrees, sweeping clockwise through the top
+  const sweep = 270;
+  const toXY = (angleDeg: number) => {
+    const a = (angleDeg * Math.PI) / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  };
+  const arcPath = (fromDeg: number, toDeg: number) => {
+    const start = toXY(fromDeg);
+    const end = toXY(toDeg);
+    const large = toDeg - fromDeg > 180 ? 1 : 0;
+    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y}`;
+  };
+  const clamped = Math.max(0, Math.min(100, score));
+  // Color earns its place: green at the low end, magenta at the high end.
+  const fill = clamped >= 67 ? '#F900D3' : clamped >= 34 ? '#F59E0B' : '#16A34A';
+  const circumference = (sweep / 360) * 2 * Math.PI * r;
+  const dash = (clamped / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center justify-center" style={{ width: size }}>
+      <div className="relative" style={{ width: size, height: size * 0.82 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+          {/* Track */}
+          <path d={arcPath(startAngle, startAngle + sweep)} fill="none" stroke="#E8EEF8" strokeWidth={stroke} strokeLinecap="round" />
+          {/* Animated value sweep */}
+          <motion.path
+            d={arcPath(startAngle, startAngle + sweep)}
+            fill="none"
+            stroke={fill}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${circumference} ${circumference}`}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: circumference - dash }}
+            transition={{ duration: 1.1, ease: 'easeOut' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ top: -size * 0.06 }}>
+          <motion.span
+            className="font-mono font-bold leading-none"
+            style={{ color: fill, fontSize: size * 0.3 }}
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            {clamped}
+          </motion.span>
+          <span className="font-mono text-wm-gray-dark" style={{ fontSize: size * 0.09 }}>/ 100</span>
+        </div>
+      </div>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-wm-gray-dark -mt-1">{label}</span>
+    </div>
+  );
+};
+
 export const Button = ({ children, onClick, variant = 'primary', className = '', disabled, Icon }: { children: React.ReactNode, onClick: () => void, variant?: 'primary' | 'secondary' | 'outline', className?: string, disabled?: boolean, Icon?: any }) => {
   const base = "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-wm-blue-highlight focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
   const styles = {

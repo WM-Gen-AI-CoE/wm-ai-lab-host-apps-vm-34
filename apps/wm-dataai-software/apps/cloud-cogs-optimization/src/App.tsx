@@ -11,6 +11,9 @@ import { FutureEnhancements } from './views/FutureEnhancements';
 
 export default function App() {
   const [currentStep, setCurrentStep] = useState<StepId>('intro');
+  // Approved recommendation ids, set on Approve and read on Impact so realized
+  // savings and the margin bridge reflect what the owner actually approved.
+  const [approvedIds, setApprovedIds] = useState<string[]>([]);
 
   const getNextStep = (current: StepId): StepId => {
     const sequence: StepId[] = ['intro', 'detect', 'analyze', 'recommend', 'approve', 'impact', 'enhancements'];
@@ -27,8 +30,8 @@ export default function App() {
       {currentStep === 'detect' && <Detect onNext={handleNext} />}
       {currentStep === 'analyze' && <Analyze onNext={handleNext} />}
       {currentStep === 'recommend' && <Recommend onNext={handleNext} />}
-      {currentStep === 'approve' && <Approve onNext={handleNext} />}
-      {currentStep === 'impact' && <Impact onNext={handleNext} />}
+      {currentStep === 'approve' && <Approve onNext={handleNext} onApproved={setApprovedIds} />}
+      {currentStep === 'impact' && <Impact onNext={handleNext} approvedIds={approvedIds} />}
       {currentStep === 'enhancements' && <FutureEnhancements onRestart={() => setCurrentStep('intro')} />}
     </Layout>
   );

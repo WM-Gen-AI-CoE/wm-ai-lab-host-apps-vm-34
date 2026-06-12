@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { recommendations } from '../data';
 import { GuideCollapsible } from '../components/GuideCollapsible';
 import { AITask, HumanTask, Badge, Button } from '../components/Shared';
@@ -8,7 +8,7 @@ const usd = (n: number) => '$' + n.toLocaleString('en-US');
 
 type Decision = 'pending' | 'approved' | 'returned';
 
-export const Approve = ({ onNext }: { onNext: () => void }) => {
+export const Approve = ({ onNext, onApproved }: { onNext: () => void, onApproved?: (ids: string[]) => void }) => {
   // The query-tuning action is held for a validation run before it can be approved.
   const gated = recommendations.filter(r => r.category === 'Query/Cluster Tuning').map(r => r.id);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
@@ -20,7 +20,13 @@ export const Approve = ({ onNext }: { onNext: () => void }) => {
   const approvedSavings = recommendations
     .filter(r => decisions[r.id] === 'approved')
     .reduce((s, r) => s + r.projectedSavings, 0);
-  const approvedCount = recommendations.filter(r => decisions[r.id] === 'approved').length;
+  const approvedIds = recommendations.filter(r => decisions[r.id] === 'approved').map(r => r.id);
+  const approvedCount = approvedIds.length;
+
+  // Lift the approved set so Impact reports realized savings from the actual decision.
+  useEffect(() => {
+    onApproved?.(approvedIds);
+  }, [decisions]);
 
   return (
     <div className="space-y-6">
