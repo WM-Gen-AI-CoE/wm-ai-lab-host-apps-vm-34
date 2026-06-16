@@ -1,9 +1,10 @@
 {
-  "name": "applied-ai-west-monroe-railway",
+  "name": "wm-dataai-software",
   "version": "1.0.0",
   "private": true,
-  "description": "Railway deploy package for the Applied AI West Monroe site.",
+  "description": "WM AI Cloud container package for the Applied AI West Monroe site.",
   "scripts": {
+    "build": "node --check server.js",
     "start": "node server.js",
     "dev": "node server.js"
   },

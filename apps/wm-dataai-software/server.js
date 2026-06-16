@@ -4,8 +4,14 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const { URL } = require("node:url");
 
-const port = Number(process.env.PORT) || 3000;
-const host = "0.0.0.0";
+const APP_SLUG = "wm-dataai-software";
+const DEFAULT_FRONTEND_PATH = `/${APP_SLUG}`;
+const DEFAULT_BACKEND_PATH = `${DEFAULT_FRONTEND_PATH}/api`;
+const DEFAULT_PUBLIC_FRONTEND_PATH = `/secure/apps/${APP_SLUG}`;
+const DEFAULT_PUBLIC_BACKEND_PATH = `${DEFAULT_PUBLIC_FRONTEND_PATH}/api`;
+
+const port = Number(process.env.PORT) || 8080;
+const host = process.env.HOST || "0.0.0.0";
 const publicDir = path.join(__dirname, "public");
 const indexPath = path.join(publicDir, "index.html");
 const sitePassword = process.env.SITE_PASSWORD || "AI@WM";
@@ -27,28 +33,47 @@ function normalizeMountPath(value, fallback = "/") {
   return `/${raw.replace(/^\/+|\/+$/g, "")}`;
 }
 
-const appHost = process.env.APP_HOST || "";
-const appFrontendPath = normalizeMountPath(process.env.APP_FRONTEND_PATH, "/");
+const appFrontendPath = normalizeMountPath(process.env.APP_FRONTEND_PATH, DEFAULT_FRONTEND_PATH);
 const appBackendPath = normalizeMountPath(
   process.env.APP_BACKEND_PATH,
-  appFrontendPath === "/" ? "/api" : `${appFrontendPath}/api`
+  appFrontendPath === DEFAULT_FRONTEND_PATH ? DEFAULT_BACKEND_PATH : (appFrontendPath === "/" ? "/api" : `${appFrontendPath}/api`)
 );
+const publicAppFrontendPath = normalizeMountPath(
+  process.env.PUBLIC_APP_FRONTEND_PATH || process.env.VITE_APP_FRONTEND_PATH,
+  DEFAULT_PUBLIC_FRONTEND_PATH
+);
+const publicAppBackendPath = normalizeMountPath(
+  process.env.PUBLIC_APP_BACKEND_PATH || process.env.VITE_APP_BACKEND_PATH,
+  DEFAULT_PUBLIC_BACKEND_PATH
+);
+const frontendPaths = uniquePaths(appFrontendPath, publicAppFrontendPath).sort((a, b) => b.length - a.length);
 
-function externalPath(pathname = "/") {
+function uniquePaths(...paths) {
+  return Array.from(new Set(paths));
+}
+
+function externalPath(pathname = "/", frontendPath = publicAppFrontendPath) {
   const suffix = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  if (appFrontendPath === "/") {
+  if (frontendPath === "/") {
     return suffix;
   }
 
-  return suffix === "/" ? `${appFrontendPath}/` : `${appFrontendPath}${suffix}`;
+  return suffix === "/" ? `${frontendPath}/` : `${frontendPath}${suffix}`;
 }
 
 function stripFrontendPath(pathname) {
-  if (appFrontendPath !== "/" && (pathname === appFrontendPath || pathname.startsWith(`${appFrontendPath}/`))) {
-    return pathname.slice(appFrontendPath.length) || "/";
+  const frontendPath = requestFrontendPath(pathname);
+  if (frontendPath && frontendPath !== "/") {
+    return pathname.slice(frontendPath.length) || "/";
   }
 
   return pathname;
+}
+
+function requestFrontendPath(pathname) {
+  return frontendPaths.find((frontendPath) => (
+    frontendPath !== "/" && (pathname === frontendPath || pathname.startsWith(`${frontendPath}/`))
+  )) || "";
 }
 
 const mimeTypes = {
@@ -158,16 +183,15 @@ function sendLeadForm(res) {
 </body></html>`);
 }
 
-function sendPasswordPage(res, statusCode = 200, message = "", next = "/") {
+function sendPasswordPage(res, statusCode = 200, message = "", next = "/", frontendPath = publicAppFrontendPath) {
   const messageHtml = message
     ? `<p class="message">${message}</p>`
     : "";
 
   const nx = (next && next.charAt(0) === "/" && next.charAt(1) !== "/") ? next : "/";
   const nextSafe = nx.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const unlockUrl = externalPath("/unlock") + "?next=" + encodeURIComponent(nx);
   const formBlock = (HS_PORTAL && HS_FORM)
-    ? `<iframe id="leadframe" src="${externalPath("/__leadform")}" title="Request access" scrolling="no" style="width:100%; border:none; min-height:300px; overflow:hidden;"></iframe>
+    ? `<iframe id="leadframe" src="${externalPath("/__leadform", frontendPath)}" title="Request access" scrolling="no" style="width:100%; border:none; min-height:300px; overflow:hidden;"></iframe>
     <script>
       (function () {
         var done = false;
@@ -182,7 +206,7 @@ function sendPasswordPage(res, statusCode = 200, message = "", next = "/") {
             return;
           }
           setTimeout(function () {
-            fetch("${externalPath("/unlock")}", { credentials: "same-origin", cache: "no-store", keepalive: true })
+            fetch("${externalPath("/unlock", frontendPath)}", { credentials: "same-origin", cache: "no-store", keepalive: true })
               .then(function () { window.location.reload(); })
               .catch(function () { window.location.reload(); });
           }, 1400);
@@ -251,7 +275,7 @@ function sendPasswordPage(res, statusCode = 200, message = "", next = "/") {
     ${formBlock}
     <div class="divider">Already have an access code?</div>
     ${messageHtml}
-    <form id="wm-auth-form" method="post" action="${externalPath("/auth")}">
+    <form id="wm-auth-form" method="post" action="${externalPath("/auth", frontendPath)}">
       <input type="hidden" name="next" value="${nextSafe}">
       <label for="password">Access code</label>
       <input id="password" name="password" type="password" autocomplete="current-password" required>
@@ -262,7 +286,7 @@ function sendPasswordPage(res, statusCode = 200, message = "", next = "/") {
 </html>`);
 }
 
-function handleAuth(req, res) {
+function handleAuth(req, res, frontendPath = publicAppFrontendPath) {
   let body = "";
 
   req.on("data", (chunk) => {
@@ -280,7 +304,7 @@ function handleAuth(req, res) {
     if (next.charAt(0) !== "/" || next.charAt(1) === "/") next = "/";
 
     if (!safeCompare(submittedPassword, sitePassword)) {
-      sendPasswordPage(res, 401, "That access code did not match. Try again, or request access.", next);
+      sendPasswordPage(res, 401, "That access code did not match. Try again, or request access.", next, frontendPath);
       return;
     }
 
@@ -307,9 +331,12 @@ function sendJson(res, statusCode, payload) {
 
 function sendAppConfig(res) {
   const body = `window.__APP_CONFIG__ = ${JSON.stringify({
-    APP_HOST: appHost,
     APP_FRONTEND_PATH: appFrontendPath,
-    APP_BACKEND_PATH: appBackendPath
+    APP_BACKEND_PATH: appBackendPath,
+    PUBLIC_APP_FRONTEND_PATH: publicAppFrontendPath,
+    PUBLIC_APP_BACKEND_PATH: publicAppBackendPath,
+    VITE_APP_FRONTEND_PATH: publicAppFrontendPath,
+    VITE_APP_BACKEND_PATH: publicAppBackendPath
   })};\n`;
 
   res.writeHead(200, {
@@ -356,6 +383,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const activeFrontendPath = requestFrontendPath(parsedUrl.pathname);
+  const isMountedRequest = Boolean(activeFrontendPath);
   const routedPathname = stripFrontendPath(parsedUrl.pathname);
 
   if (routedPathname === "/auth") {
@@ -364,7 +393,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    handleAuth(req, res);
+    handleAuth(req, res, activeFrontendPath || publicAppFrontendPath);
     return;
   }
 
@@ -384,13 +413,24 @@ const server = http.createServer((req, res) => {
       const cleanPath = stripFrontendPath(parsedUrl.pathname);
       res.writeHead(303, {
         "cache-control": "no-store",
-        "location": externalPath(cleanPath) + (cleanQuery ? "?" + cleanQuery : ""),
+        "location": externalPath(cleanPath, activeFrontendPath || publicAppFrontendPath) + (cleanQuery ? "?" + cleanQuery : ""),
         "set-cookie": `${authCookieName}=${authToken()}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
         "x-content-type-options": "nosniff"
       });
       res.end();
       return;
     }
+  }
+
+  if (activeFrontendPath && parsedUrl.pathname === activeFrontendPath) {
+    const query = parsedUrl.searchParams.toString();
+    res.writeHead(308, {
+      "cache-control": "no-store",
+      "location": `${activeFrontendPath}/${query ? `?${query}` : ""}`,
+      "x-content-type-options": "nosniff"
+    });
+    res.end();
+    return;
   }
 
   // Form-completion grant: a successful embedded lead form (HubSpot) sends the
@@ -433,7 +473,9 @@ const server = http.createServer((req, res) => {
       ok: true,
       app: "wm-dataai-software",
       frontendPath: appFrontendPath,
-      backendPath: appBackendPath
+      backendPath: appBackendPath,
+      publicFrontendPath: publicAppFrontendPath,
+      publicBackendPath: publicAppBackendPath
     });
     return;
   }
@@ -444,7 +486,8 @@ const server = http.createServer((req, res) => {
     const seg = pathname.split("/").filter(Boolean)[0];
     const isDemoApp = seg && seg !== "shots" && fs.existsSync(path.join(publicDir, seg, "index.html"));
     if (GATE_DEMOS && isDemoApp && !FREE_DEMOS.has(seg) && !isAuthorized(req)) {
-      sendPasswordPage(res, 200, "", externalPath(pathname));
+      const frontendPath = activeFrontendPath || publicAppFrontendPath;
+      sendPasswordPage(res, 200, "", externalPath(pathname, frontendPath), frontendPath);
       return;
     }
   }
@@ -483,7 +526,7 @@ const server = http.createServer((req, res) => {
     }
 
     const wantsHtml = (req.headers.accept || "").includes("text/html");
-    if (wantsHtml) {
+    if (wantsHtml && (isMountedRequest || pathname === "/")) {
       sendFile(req, res, indexPath);
       return;
     }

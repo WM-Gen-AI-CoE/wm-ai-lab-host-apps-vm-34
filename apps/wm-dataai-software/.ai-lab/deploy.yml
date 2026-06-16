@@ -1,0 +1,9 @@
+app: wm-dataai-software
+type: container
+runtime:
+  variables:
+    - APP_FRONTEND_PATH
+    - APP_BACKEND_PATH
+    - PORT
+  githubSecrets: []
+  sharedSecretAliases: []
