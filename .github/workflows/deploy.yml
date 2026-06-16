@@ -1,0 +1,135 @@
+name: Deploy Container App
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment and AI Lab target environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - stage
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      PROJECT_ID: ai-lab-host
+      APP_NAME: wm-dataai-software
+      DEPLOYMENT_BROKER_URL: ${{ vars.DEPLOYMENT_BROKER_URL || 'https://eus-ai-lab-host-util-deploy-broker-func.azurewebsites.net' }}
+      BROKER_AUDIENCE: ${{ vars.BROKER_AUDIENCE || 'api://ai-lab-host-deploy-broker' }}
+      RUNTIME_APP_FRONTEND_PATH: ${{ vars.APP_FRONTEND_PATH || '/wm-dataai-software' }}
+      RUNTIME_APP_BACKEND_PATH: ${{ vars.APP_BACKEND_PATH || '/wm-dataai-software/api' }}
+      RUNTIME_PORT: ${{ vars.PORT || '8080' }}
+      DOCKERFILE_PATH: ${{ vars.DOCKERFILE_PATH || 'apps/wm-dataai-software/Dockerfile' }}
+      BUILD_CONTEXT_PATH: ${{ vars.BUILD_CONTEXT_PATH || 'apps/wm-dataai-software' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage source and request brokered Azure DevOps deployment
+        run: |
+          set -euo pipefail
+
+          source_archive="${RUNNER_TEMP}/container-source.tar.gz"
+          git archive --format=tar.gz --output "${source_archive}" HEAD
+
+          if [ -z "${DEPLOYMENT_BROKER_URL}" ]; then
+            echo "DEPLOYMENT_BROKER_URL must be set in the GitHub environment or workflow fallback." >&2
+            exit 1
+          fi
+
+          oidc_token="$(
+            curl --fail-with-body --silent --show-error \
+              --header "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${BROKER_AUDIENCE}" |
+              jq -r '.value'
+          )"
+
+          jq -n \
+            --arg projectId "${PROJECT_ID}" \
+            --arg app "${APP_NAME}" \
+            --arg environment "${{ inputs.environment }}" \
+            --arg dockerfilePath "${DOCKERFILE_PATH}" \
+            --arg contextPath "${BUILD_CONTEXT_PATH}" \
+            '{
+              projectId: $projectId,
+              app: $app,
+              environment: $environment,
+              dockerfilePath: $dockerfilePath,
+              contextPath: $contextPath
+            }' > upload-request.json
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${oidc_token}" \
+            --header "Content-Type: application/json" \
+            --data @upload-request.json \
+            "${DEPLOYMENT_BROKER_URL%/}/container-source-upload-requests" \
+            > upload-response.json
+
+          source_storage_account_name="$(jq -r '.artifact.sourceStorageAccountName' upload-response.json)"
+          source_container_name="$(jq -r '.artifact.sourceContainerName' upload-response.json)"
+          source_blob_name="$(jq -r '.artifact.sourceBlobName' upload-response.json)"
+          source_sas_url="$(jq -r '.sasUrl' upload-response.json)"
+          source_sas_token="${source_sas_url#*\?}"
+          runtime_app_frontend_path="${RUNTIME_APP_FRONTEND_PATH:-/${APP_NAME}}"
+          runtime_app_backend_path="${RUNTIME_APP_BACKEND_PATH:-${runtime_app_frontend_path}/api}"
+          runtime_port="${RUNTIME_PORT:-8080}"
+
+          az storage blob upload \
+            --account-name "${source_storage_account_name}" \
+            --container-name "${source_container_name}" \
+            --name "${source_blob_name}" \
+            --file "${source_archive}" \
+            --overwrite true \
+            --sas-token "${source_sas_token}"
+
+          jq -n \
+            --arg projectId "${PROJECT_ID}" \
+            --arg app "${APP_NAME}" \
+            --arg environment "${{ inputs.environment }}" \
+            --arg sourceStorageAccountName "${source_storage_account_name}" \
+            --arg sourceContainerName "${source_container_name}" \
+            --arg sourceBlobName "${source_blob_name}" \
+            --arg dockerfilePath "${DOCKERFILE_PATH}" \
+            --arg contextPath "${BUILD_CONTEXT_PATH}" \
+            --arg frontendPath "${runtime_app_frontend_path}" \
+            --arg backendPath "${runtime_app_backend_path}" \
+            --arg port "${runtime_port}" \
+            '{
+              projectId: $projectId,
+              app: $app,
+              type: "container",
+              environment: $environment,
+              artifact: {
+                sourceStorageAccountName: $sourceStorageAccountName,
+                sourceContainerName: $sourceContainerName,
+                sourceBlobName: $sourceBlobName,
+                dockerfilePath: $dockerfilePath,
+                contextPath: $contextPath
+              },
+              runtime: {
+                variables: {
+                  APP_FRONTEND_PATH: $frontendPath,
+                  APP_BACKEND_PATH: $backendPath,
+                  PORT: $port
+                },
+                secrets: {},
+                sharedSecretAliases: []
+              }
+            }' > deployment-request.json
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${oidc_token}" \
+            --header "Content-Type: application/json" \
+            --data @deployment-request.json \
+            "${DEPLOYMENT_BROKER_URL%/}/deployment-requests"
